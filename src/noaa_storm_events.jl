@@ -1,7 +1,3 @@
-import Pkg
-
-Pkg.add("FTPClient")
-
 using FTPClient
 
 ftp = FTP(hostname="ftp.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/")
