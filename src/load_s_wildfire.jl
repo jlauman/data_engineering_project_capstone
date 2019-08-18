@@ -1,12 +1,21 @@
-import LibPQ, SQLite
-using Dates, DataFrames
+println("load_s_wildfire: start")
+
+using Distributed
+if nprocs() < length(Sys.cpu_info())
+    n = length(Sys.cpu_info()) - nprocs()
+    addprocs(n, restrict=true)
+end
+println("load_s_wildfire: nprocs=$(nprocs())")
+
+@everywhere prepend!(LOAD_PATH, ["Project.toml"])
+@everywhere import LibPQ, SQLite
+@everywhere using Dates, DataFrames
+
+@everywhere DISASTER_PASSWORD = read("./etc/disaster-pass", String)
 
 # the step must match the sql value
-# RECORD_RANGE = 1:10_000:2_000_000
-RECORD_RANGE = 1:10_000:100_000
-DISASTER_PASSWORD = read("./etc/disaster-pass", String)
-
-println("load_s_wildfire: start")
+RECORD_RANGE = 1:10_000:2_000_000
+# RECORD_RANGE = 1:10_000:100_000
 
 postgres = LibPQ.Connection("host=127.0.0.1 port=5432 dbname=disaster user=disaster password=$DISASTER_PASSWORD")
 sqlite = SQLite.DB("data/fs_usda_wildfire/Data/FPA_FOD_20170508.sqlite")
@@ -37,11 +46,13 @@ create table if not exists public.s_wildfire (
 );
 """
 LibPQ.execute(postgres, sql)
+LibPQ.close(postgres)
 
-starttime = Dates.now()
-
-for i = RECORD_RANGE
+@everywhere function load_s_wildfire(i)
     println("\ti=$i")
+    postgres = LibPQ.Connection("host=127.0.0.1 port=5432 dbname=disaster user=disaster password=$DISASTER_PASSWORD")
+    sqlite = SQLite.DB("data/fs_usda_wildfire/Data/FPA_FOD_20170508.sqlite")
+
     sql =
     """
     select
@@ -108,13 +119,22 @@ for i = RECORD_RANGE
         )
         """
     )
+
+    LibPQ.close(postgres)
+    SQLite._close(sqlite)
 end
 
-LibPQ.close(postgres)
-SQLite._close(sqlite)
+
+starttime = Dates.now()
+jobs = []
+for i = RECORD_RANGE
+    job = @spawn load_s_wildfire(i)
+    push!(jobs, job)
+end
+for job in jobs
+    fetch(job)
+end
 
 endtime = Dates.now()
 println("load_s_wildfire: elapsed time is $(Dates.canonicalize(Dates.CompoundPeriod(endtime - starttime)))")
-
-
 println("load_s_wildfire: done")
