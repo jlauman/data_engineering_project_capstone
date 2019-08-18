@@ -48,8 +48,7 @@ The source of this data set is:
 
 The format selected for this project is CSV files.
 
-
-ftp://ftp.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/
+  ftp://ftp.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/
 
 
 ### USGS Earthquake Catalog, API
@@ -61,6 +60,10 @@ part of the Earthquake Hazards Program with the U.S. Geological Survey (USGS).
 The starting URL for this data source is:
 
   https://earthquake.usgs.gov/ws/
+
+The data dictionary is:
+
+  https://earthquake.usgs.gov/data/comcat/data-eventterms.php
 
 The data set is available through a web API and results specified through URL
 query parameters as shown below.

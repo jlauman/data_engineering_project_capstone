@@ -97,6 +97,12 @@ uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
+[[Glob]]
+deps = ["Compat", "Test"]
+git-tree-sha1 = "c72f1fcb7d17426de1e8af2e948dfb3de1116eed"
+uuid = "c27321d9-0574-5035-807b-f59d2c89b15c"
+version = "1.2.0"
+
 [[HTTP]]
 deps = ["Base64", "Dates", "IniFile", "MbedTLS", "Sockets"]
 git-tree-sha1 = "03ddc88af7f2d963fac5aa9f3ac8e11914d68a78"
