@@ -58,7 +58,7 @@ This data set is provided by the National Earthquake Hazards Reduction Program
 (NEHRP) led by the National Institutes of Standards and Technology (NIST) and
 part of the Earthquake Hazards Program with the U.S. Geological Survey (USGS).
 
-The starting URL for this data sorce is:
+The starting URL for this data source is:
 
   https://earthquake.usgs.gov/ws/
 
