@@ -10,9 +10,9 @@ PG_PASSWORD=$(cat ${PROJECT_DIR}/etc/postgres-pass)
 VOLUMES_DIR="${PROJECT_DIR}/mnt/postgres"
 echo "VOLUMES_DIR=${VOLUMES_DIR}"
 
-if [ -d ${VOLUMES_DIR} ]; then
-    rm -rf ${VOLUMES_DIR}
-fi
+# if [ -d ${VOLUMES_DIR} ]; then
+#     rm -rf ${VOLUMES_DIR}
+# fi
 mkdir -p ${VOLUMES_DIR}
 
 CONTAINER_EXISTS=$(docker ps | grep "capstone-database$" | wc -l | tr -d " ")

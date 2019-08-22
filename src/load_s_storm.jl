@@ -1,10 +1,10 @@
 println("\n\nload_s_storm: start")
 
 using Distributed
-# if nprocs() < length(Sys.cpu_info())
-#     n = length(Sys.cpu_info()) - nprocs()
-#     addprocs(n, restrict=true)
-# end
+if nprocs() < length(Sys.cpu_info())
+    n = length(Sys.cpu_info()) - nprocs()
+    addprocs(n, restrict=true)
+end
 println("load_s_storm: nprocs=$(nprocs())")
 
 @everywhere prepend!(LOAD_PATH, ["Project.toml"])

@@ -3,14 +3,13 @@ prepend!(LOAD_PATH, ["Project.toml"])
 using Dates
 import HTTP
 
-years = collect(1992:1993)
-# years = collect(1992:2015)
+years = collect(1992:2015)
 months = collect(1:12)
 
 println("years=", years)
 println("months=", months)
 
-make_url(starttime, endtime) = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=$(starttime)&endtime=$(endtime)&minlongitude=-170&minlatitude=15&maxlongitude=-60&maxlatitude=72"
+make_url(starttime, endtime) = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=$(starttime)&endtime=$(endtime)&minmagnitude=2&minlongitude=-170&minlatitude=15&maxlongitude=-60&maxlatitude=72"
 
 base = "./data/usgs_earthquake"
 mkpath(base)
