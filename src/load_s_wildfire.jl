@@ -1,7 +1,7 @@
-println("load_s_wildfire: start")
+println("\n\nload_s_wildfire: start")
 
 # number of records to load as sample (0 disables)
-RECORD_LIMIT=10_000
+RECORD_LIMIT=5_000
 
 using Distributed
 if RECORD_LIMIT == 0 && nprocs() < length(Sys.cpu_info())
@@ -17,9 +17,9 @@ println("load_s_wildfire: nprocs=$(nprocs())")
 @everywhere DISASTER_PASSWORD = read("./etc/disaster-pass", String)
 
 # the step must match the sql value
-RECORD_RANGE = 1:10_000:2_000_000
+RECORD_RANGE = 1:5_000:2_000_000
 if RECORD_LIMIT > 0
-    RECORD_RANGE = 1:10_000:RECORD_LIMIT
+    RECORD_RANGE = 1:5_000:RECORD_LIMIT
 end
 println("load_s_wildfire: RECORD_RANGE=$(RECORD_RANGE)")
 
@@ -38,6 +38,7 @@ create table if not exists public.s_wildfire (
   reporting_unit_name  text,
   fire_name            text,
   fire_year            integer,
+  fire_doy             integer,
   stat_cause_code      decimal,
   stat_cause_descr     text,
   cont_date            real,
@@ -48,8 +49,31 @@ create table if not exists public.s_wildfire (
   latitude             decimal,
   longitude            decimal,
   state                text,
-  county               text
+  county               text,
+  ogc_fid              integer,
+  datestamp            date
 );
+
+create or replace function public.trigger_s_wildfire_udf()
+returns trigger as \$body\$
+declare
+    _ogc_fid  integer;
+begin
+    select ogc_fid into _ogc_fid
+        from public.tl_2015_us_county
+        where ST_Contains(
+            tl_2015_us_county.wkb_geometry,
+            ST_SetSRID(ST_MakePoint(new.longitude, new.latitude), 4326));
+    -- raise notice 'update_s_wildfire_ogc_fid: id=%, ogc_fid=%', new.id, _ogc_fid;
+    new.ogc_fid := _ogc_fid;
+    new.datestamp := (new.fire_year::text || '.' || lpad(new.fire_doy::text, 3, '0'))::date;
+    return new;
+end; \$body\$ language plpgsql;
+
+drop trigger if exists trigger_s_wildfire on public.s_wildfire;
+create trigger trigger_s_wildfire
+  before insert on public.s_wildfire
+  for each row execute function public.trigger_s_wildfire_udf();
 """
 LibPQ.execute(postgres, sql)
 LibPQ.close(postgres)
@@ -66,6 +90,7 @@ LibPQ.close(postgres)
         "NWCG_REPORTING_UNIT_NAME" as reporting_unit_name,
         "FIRE_NAME" as fire_name,
         "FIRE_YEAR" as fire_year,
+        "DISCOVERY_DOY" as fire_doy,
         "STAT_CAUSE_CODE" as stat_cause_code,
         "STAT_CAUSE_DESCR" as stat_cause_descr,
         "CONT_DATE" as cont_date,
@@ -80,7 +105,7 @@ LibPQ.close(postgres)
     from "Fires"
     where "OBJECTID" >= $i
     order by "OBJECTID"
-    limit 10000;
+    limit 5000;
     """
 
     df = SQLite.Query(sqlite, sql, values=[]) |> DataFrame
@@ -95,6 +120,7 @@ LibPQ.close(postgres)
             reporting_unit_name,
             fire_name,
             fire_year,
+            fire_doy,
             stat_cause_code,
             stat_cause_descr,
             cont_date,
@@ -121,7 +147,8 @@ LibPQ.close(postgres)
             \$12,
             \$13,
             \$14,
-            \$15
+            \$15,
+            \$16
         )
         """
     )

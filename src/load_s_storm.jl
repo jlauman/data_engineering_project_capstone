@@ -1,7 +1,7 @@
 println("\n\nload_s_storm: start")
 
 # number of files to load as sample (0 disables)
-FILE_LIMIT = 2
+FILE_LIMIT = 1
 
 using Distributed
 if FILE_LIMIT == 0 && nprocs() < length(Sys.cpu_info())
@@ -29,25 +29,48 @@ sql =
 """
 drop table if exists public.s_storm;
 create table if not exists public.s_storm (
-  id                   integer primary key,
-  state                text,
-  state_fips           text,
-  begin_yearmonth      integer,
-  begin_day            integer,
-  begin_location       text,
-  begin_latitude       decimal,
-  begin_longitude      decimal,
-  end_yearmonth        integer,
-  end_day              integer,
-  end_location         text,
-  end_latitude         decimal,
-  end_longitude        decimal,
-  event_type           text,
-  source               text,
-  magnitude            decimal,
-  magnitude_type       text,
-  category             text
+    id                   integer primary key,
+    state                text,
+    state_fips           text,
+    begin_yearmonth      integer,
+    begin_day            integer,
+    begin_location       text,
+    begin_latitude       decimal,
+    begin_longitude      decimal,
+    end_yearmonth        integer,
+    end_day              integer,
+    end_location         text,
+    end_latitude         decimal,
+    end_longitude        decimal,
+    event_type           text,
+    source               text,
+    magnitude            decimal,
+    magnitude_type       text,
+    category             text,
+    ogc_fid              integer,
+    datestamp            date
 );
+
+create or replace function public.trigger_s_storm_udf()
+returns trigger as \$body\$
+declare
+    _ogc_fid  integer;
+begin
+    select ogc_fid into _ogc_fid
+        from public.tl_2015_us_county
+        where st_contains(
+            tl_2015_us_county.wkb_geometry,
+            ST_SetSRID(ST_MakePoint(new.begin_longitude, new.begin_latitude), 4326));
+    -- raise notice 'update_s_storm_ogc_fid: id=%, ogc_fid=%', new.id, _ogc_fid;
+    new.ogc_fid = _ogc_fid;
+    new.datestamp = (left(new.begin_yearmonth::text, 4) || '-' || right(new.begin_yearmonth::text, 2) || '-' || new.begin_day::text)::date;
+    return new;
+end; \$body\$ language plpgsql;
+
+drop trigger if exists trigger_s_storm on public.s_storm;
+create trigger trigger_s_storm
+  before insert on public.s_storm
+  for each row execute function public.trigger_s_storm_udf();
 """
 LibPQ.execute(postgres, sql)
 LibPQ.close(postgres)

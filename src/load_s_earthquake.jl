@@ -39,8 +39,31 @@ create table if not exists public.s_earthquake (
   magnitude            decimal,
   magnitude_type       text,
   type                 text,
-  status               text
+  status               text,
+  ogc_fid              integer,
+  datestamp            date
 );
+
+create or replace function public.trigger_s_earthquake_udf()
+returns trigger as \$body\$
+declare
+    _ogc_fid  integer;
+begin
+    select ogc_fid into _ogc_fid
+        from public.tl_2015_us_county
+        where st_contains(
+            tl_2015_us_county.wkb_geometry,
+            ST_SetSRID(ST_MakePoint(new.longitude, new.latitude), 4326));
+    -- raise notice 'update_s_earthquake_ogc_fid: id=%, ogc_fid=%', new.id, _ogc_fid;
+    new.ogc_fid = _ogc_fid;
+    new.datestamp = new.time::date;
+    return new;
+end; \$body\$ language plpgsql;
+
+drop trigger if exists trigger_s_earthquake on public.s_earthquake;
+create trigger trigger_s_earthquake
+  before insert on public.s_earthquake
+  for each row execute function public.trigger_s_earthquake_udf();
 """
 LibPQ.execute(postgres, sql)
 LibPQ.close(postgres)
