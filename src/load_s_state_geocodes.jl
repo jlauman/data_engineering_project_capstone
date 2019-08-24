@@ -52,6 +52,7 @@ function load_s_state_geocodes(filepath)
         """
     )
 
+    LibPQ.execute(postgres, "delete from s_state_geocode where state_fips = '0';")
     LibPQ.close(postgres)
 end
 

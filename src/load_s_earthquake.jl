@@ -1,11 +1,15 @@
 println("\n\nload_s_earthquake: start")
 
+# number of files to load as sample (0 disables)
+FILE_LIMIT = 2
+
 using Distributed
-if nprocs() < length(Sys.cpu_info())
+if FILE_LIMIT == 0 && nprocs() < length(Sys.cpu_info())
     n = length(Sys.cpu_info()) - nprocs()
     addprocs(n, restrict=true)
 end
 println("load_s_earthquake: nprocs=$(nprocs())")
+
 
 @everywhere prepend!(LOAD_PATH, ["Project.toml"])
 @everywhere import CSV, LibPQ
@@ -14,6 +18,9 @@ println("load_s_earthquake: nprocs=$(nprocs())")
 @everywhere DISASTER_PASSWORD = read("./etc/disaster-pass", String)
 
 FILE_PATHS = glob("*.csv", "./data/usgs_earthquake")
+if FILE_LIMIT > 0
+    FILE_PATHS = FILE_PATHS[1:FILE_LIMIT]
+end
 println("load_s_earthquake: FILE_PATHS=$(FILE_PATHS)")
 
 postgres = LibPQ.Connection("host=127.0.0.1 port=5432 dbname=disaster user=disaster password=$DISASTER_PASSWORD")

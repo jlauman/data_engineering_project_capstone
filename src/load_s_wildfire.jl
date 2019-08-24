@@ -1,7 +1,10 @@
 println("load_s_wildfire: start")
 
+# number of records to load as sample (0 disables)
+RECORD_LIMIT=10_000
+
 using Distributed
-if nprocs() < length(Sys.cpu_info())
+if RECORD_LIMIT == 0 && nprocs() < length(Sys.cpu_info())
     n = length(Sys.cpu_info()) - nprocs()
     addprocs(n, restrict=true)
 end
@@ -15,7 +18,10 @@ println("load_s_wildfire: nprocs=$(nprocs())")
 
 # the step must match the sql value
 RECORD_RANGE = 1:10_000:2_000_000
-# RECORD_RANGE = 1:10_000:100_000
+if RECORD_LIMIT > 0
+    RECORD_RANGE = 1:10_000:RECORD_LIMIT
+end
+println("load_s_wildfire: RECORD_RANGE=$(RECORD_RANGE)")
 
 postgres = LibPQ.Connection("host=127.0.0.1 port=5432 dbname=disaster user=disaster password=$DISASTER_PASSWORD")
 sqlite = SQLite.DB("data/fs_usda_wildfire/Data/FPA_FOD_20170508.sqlite")

@@ -1,7 +1,10 @@
 println("\n\nload_s_storm: start")
 
+# number of files to load as sample (0 disables)
+FILE_LIMIT = 2
+
 using Distributed
-if nprocs() < length(Sys.cpu_info())
+if FILE_LIMIT == 0 && nprocs() < length(Sys.cpu_info())
     n = length(Sys.cpu_info()) - nprocs()
     addprocs(n, restrict=true)
 end
@@ -14,6 +17,9 @@ println("load_s_storm: nprocs=$(nprocs())")
 @everywhere DISASTER_PASSWORD = read("./etc/disaster-pass", String)
 
 FILE_PATHS = glob("StormEvents_details-*.csv", "./data/noaa_storm")
+if FILE_LIMIT > 0
+    FILE_PATHS = FILE_PATHS[1:FILE_LIMIT]
+end
 println("load_s_storm: FILE_PATHS=$(FILE_PATHS)")
 
 postgres = LibPQ.Connection("host=127.0.0.1 port=5432 dbname=disaster user=disaster password=$DISASTER_PASSWORD")

@@ -207,6 +207,9 @@ postgis_topology	10	34395	false	 2.5.2
   https://www.census.gov/geographies/reference-files/2015/demo/popest/2015-fips.html
 
 
+https://www.census.gov/programs-surveys/geography/guidance/geo-identifiers.html
+
+https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2017/TGRSHP2017_TechDoc_Ch3.pdf
 
 https://www.census.gov/programs-surveys/geography.html
 
