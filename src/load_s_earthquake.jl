@@ -1,7 +1,8 @@
 println("\n\nload_s_earthquake: start")
 
 # number of files to load as sample (0 disables)
-FILE_LIMIT = 4
+# FILE_LIMIT = 2
+FILE_LIMIT = 0
 
 using Distributed
 if FILE_LIMIT == 0 && nprocs() < length(Sys.cpu_info())

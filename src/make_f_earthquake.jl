@@ -16,7 +16,7 @@ create table if not exists public.f_earthquake (
     latitude        decimal not null,
     longitude       decimal not null,
     magnitude       decimal not null,
-    magnitude_type  text not null,
+    magnitude_type  text,
     d_datestamp_id  date not null references public.d_datestamp(d_datestamp_id),
     d_location_id   integer not null references public.d_location(d_location_id),
     d_severity_id   integer not null references public.d_severity(d_severity_id)

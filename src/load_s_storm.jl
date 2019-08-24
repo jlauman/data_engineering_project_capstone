@@ -1,7 +1,8 @@
 println("\n\nload_s_storm: start")
 
 # number of files to load as sample (0 disables)
-FILE_LIMIT = 4
+# FILE_LIMIT = 2
+FILE_LIMIT = 0
 
 using Distributed
 if FILE_LIMIT == 0 && nprocs() < length(Sys.cpu_info())
@@ -90,8 +91,9 @@ begin
         elsif new.tor_f_scale = 'F3' then new.severity = 6;
         elsif new.tor_f_scale = 'F4' then new.severity = 8;
         elsif new.tor_f_scale = 'F5' then new.severity = 10;
+        else new.severity = 1;
         end if;
-    else
+    elsif new.event_type = 'Thunderstorm Wind' or new.event_type = 'Winter Storm' then
         -- wind speed
         if new.magnitude < 12 then new.severity = 1;
         elsif new.magnitude < 25 then new.severity = 2;
@@ -102,8 +104,10 @@ begin
         elsif new.magnitude < 250 then new.severity = 7;
         elsif new.magnitude < 300 then new.severity = 8;
         elsif new.magnitude < 350 then new.severity = 9;
-        else new.magnitude = 10;
+        else new.severity = 10;
         end if;
+    else
+        new.severity = 1;
     end if;
 
     return new;

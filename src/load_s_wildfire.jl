@@ -1,7 +1,8 @@
 println("\n\nload_s_wildfire: start")
 
 # number of records to load as sample (0 disables)
-RECORD_LIMIT=20_000
+# RECORD_LIMIT=10_000
+RECORD_LIMIT=0
 
 using Distributed
 if RECORD_LIMIT == 0 && nprocs() < length(Sys.cpu_info())

@@ -16,6 +16,7 @@ scripts = [
     "./src/make_f_wildfire.jl"
 ];
 
+load_starttime = Dates.now()
 elapsed_times = [];
 for script in scripts
     starttime = Dates.now()
@@ -28,3 +29,6 @@ println("\n\nload...")
 for elapsed_time in elapsed_times
     println(elapsed_time)
 end
+
+load_endtime = Dates.now()
+println("load: total elapsed time is $(Dates.canonicalize(Dates.CompoundPeriod(load_endtime - load_starttime)))")
