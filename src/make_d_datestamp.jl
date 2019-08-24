@@ -1,4 +1,4 @@
-println("\n\nload_d_datestamp: start")
+println("\n\nmake_d_location: start")
 
 prepend!(LOAD_PATH, ["Project.toml"])
 import LibPQ
@@ -11,7 +11,7 @@ sql =
 """
 drop table if exists public.d_datestamp;
 create table if not exists public.d_datestamp (
-    datestamp_id  date primary key,
+    d_datestamp_id  date primary key,
     year          integer not null,
     month         integer not null,
     day           integer not null,
@@ -25,7 +25,7 @@ begin
     for _date in select generate_series('1992-01-01'::date, '2015-12-31', '1 day') loop
         -- raise notice '_date=%', _date;
         insert into public.d_datestamp (
-            datestamp_id,
+            d_datestamp_id,
             year,
             month,
             day,
@@ -45,4 +45,4 @@ LibPQ.execute(postgres, sql)
 LibPQ.close(postgres)
 
 
-println("\n\nload_d_datestamp: stop")
+println("make_d_location: stop")

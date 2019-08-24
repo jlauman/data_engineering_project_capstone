@@ -13,4 +13,4 @@ run(Cmd(`ogr2ogr -nlt PROMOTE_TO_MULTI -f PGDump -t_srs "EPSG:4326" tl_2015_us_c
 
 run(Cmd(`psql --host=127.0.0.1 --user=disaster --dbname=disaster --file=tl_2015_us_county.sql`, env=XENV, dir=XDIR))
 
-println("\n\nload_us_county_shp: done")
+println("load_us_county_shp: done")

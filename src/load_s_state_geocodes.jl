@@ -11,7 +11,7 @@ println("load_s_state_geocodes: FILE_PATH=$(FILE_PATH)")
 
 postgres = LibPQ.Connection("host=127.0.0.1 port=5432 dbname=disaster user=disaster password=$DISASTER_PASSWORD")
 
-# create empty storm staging table
+# create empty table
 sql =
 """
 drop table if exists public.s_state_geocode;
@@ -52,7 +52,13 @@ function load_s_state_geocodes(filepath)
         """
     )
 
-    LibPQ.execute(postgres, "delete from s_state_geocode where state_fips = '0';")
+    LibPQ.execute(postgres,
+    """
+        -- remove region records
+        delete from public.s_state_geocode where state_fips = '0';
+        -- prefix single digit codes with "0"
+        update public.s_state_geocode set state_fips = ('0' || state_fips) where length(state_fips) = 1;
+    """)
     LibPQ.close(postgres)
 end
 
