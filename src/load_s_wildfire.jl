@@ -1,7 +1,7 @@
 println("\n\nload_s_wildfire: start")
 
 # number of records to load as sample (0 disables)
-RECORD_LIMIT=5_000
+RECORD_LIMIT=20_000
 
 using Distributed
 if RECORD_LIMIT == 0 && nprocs() < length(Sys.cpu_info())
@@ -51,7 +51,8 @@ create table if not exists public.s_wildfire (
   state                text,
   county               text,
   ogc_fid              integer,
-  datestamp            date
+  datestamp            date,
+  severity             integer
 );
 
 create or replace function public.trigger_s_wildfire_udf()
@@ -67,6 +68,17 @@ begin
     -- raise notice 'update_s_wildfire_ogc_fid: id=%, ogc_fid=%', new.id, _ogc_fid;
     new.ogc_fid := _ogc_fid;
     new.datestamp := (new.fire_year::text || '.' || lpad(new.fire_doy::text, 3, '0'))::date;
+    -- use size_class to create 1-10 severity value
+    if new.fire_size_class = 'A' then new.severity = 1;
+    elsif new.fire_size_class = 'B' then new.severity = 2;
+    elsif new.fire_size_class = 'C' then new.severity = 3;
+    elsif new.fire_size_class = 'D' then new.severity = 4;
+    elsif new.fire_size_class = 'E' then new.severity = 5;
+    elsif new.fire_size_class = 'F' then new.severity = 6;
+    elsif new.fire_size < 10000 then new.severity = 8;
+    elsif new.fire_size < 100000 then new.severity = 9;
+    else new.severity = 10;
+    end if;
     return new;
 end; \$body\$ language plpgsql;
 

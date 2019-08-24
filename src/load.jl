@@ -1,16 +1,30 @@
+# run all ETL scripts for the disaster database
+using Dates
 
-run(`julia ./src/load_s_state_geocodes.jl`)
 
-run(`julia ./src/load_us_county_shp.jl`)
+scripts = [
+    "./src/load_s_state_geocodes.jl",
+    "./src/load_us_county_shp.jl",
+    "./src/load_s_earthquake.jl",
+    "./src/load_s_storm.jl",
+    "./src/load_s_wildfire.jl",
+    "./src/make_d_datestamp.jl",
+    "./src/make_d_location.jl",
+    "./src/make_d_severity.jl",
+    "./src/make_f_earthquake.jl",
+    "./src/make_f_storm.jl",
+    "./src/make_f_wildfire.jl"
+];
 
-run(`julia ./src/load_s_earthquake.jl`)
+elapsed_times = [];
+for script in scripts
+    starttime = Dates.now()
+    run(`julia $(script)`)
+    endtime = Dates.now()
+    push!(elapsed_times, "$(script): elapsed time is $(Dates.canonicalize(Dates.CompoundPeriod(endtime - starttime)))")
+end
 
-run(`julia ./src/load_s_storm.jl`)
-
-run(`julia ./src/load_s_wildfire.jl`)
-
-run(`julia ./src/make_d_datestamp.jl`)
-
-run(`julia ./src/make_d_location.jl`)
-
-run(`julia ./src/make_f_earthquake.jl`)
+println("\n\nload...")
+for elapsed_time in elapsed_times
+    println(elapsed_time)
+end

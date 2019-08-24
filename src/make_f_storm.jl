@@ -1,4 +1,4 @@
-println("\n\nmake_f_earthquake: start")
+println("\n\nmake_f_storm: start")
 
 prepend!(LOAD_PATH, ["Project.toml"])
 import LibPQ
@@ -9,46 +9,45 @@ postgres = LibPQ.Connection("host=127.0.0.1 port=5432 dbname=disaster user=disas
 
 sql =
 """
-drop table if exists public.f_earthquake;
-create table if not exists public.f_earthquake (
+drop table if exists public.f_storm;
+create table if not exists public.f_storm (
     event_id        uuid primary key default gen_random_uuid(),
-    earthquake_id   text not null,
+    storm_id        text not null,
     latitude        decimal not null,
     longitude       decimal not null,
-    magnitude       decimal not null,
-    magnitude_type  text not null,
+    type            text,
+    magnitude       decimal,
     d_datestamp_id  date not null references public.d_datestamp(d_datestamp_id),
     d_location_id   integer not null references public.d_location(d_location_id),
     d_severity_id   integer not null references public.d_severity(d_severity_id)
 );
 
 
-truncate public.f_earthquake;
-insert into public.f_earthquake (
-    earthquake_id,
+truncate public.f_storm;
+insert into public.f_storm (
+    storm_id,
     latitude,
     longitude,
+    type,
     magnitude,
-    magnitude_type,
     d_datestamp_id,
     d_location_id,
     d_severity_id
 )
 select
     id,
-    latitude,
-    longitude,
+    begin_latitude,
+    begin_longitude,
+    event_type,
     magnitude,
-    magnitude_type,
     datestamp,
     ogc_fid,
     severity
-from public.s_earthquake
-where ogc_fid is not null
-and type = 'earthquake';
+from public.s_storm
+where ogc_fid is not null;
 """
 LibPQ.execute(postgres, sql)
 LibPQ.close(postgres)
 
 
-println("make_f_earthquake: stop")
+println("make_f_storm: stop")

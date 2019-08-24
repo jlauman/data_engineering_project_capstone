@@ -1,7 +1,7 @@
 println("\n\nload_s_earthquake: start")
 
 # number of files to load as sample (0 disables)
-FILE_LIMIT = 2
+FILE_LIMIT = 4
 
 using Distributed
 if FILE_LIMIT == 0 && nprocs() < length(Sys.cpu_info())
@@ -41,7 +41,8 @@ create table if not exists public.s_earthquake (
   type                 text,
   status               text,
   ogc_fid              integer,
-  datestamp            date
+  datestamp            date,
+  severity             integer
 );
 
 create or replace function public.trigger_s_earthquake_udf()
@@ -54,9 +55,24 @@ begin
         where st_contains(
             tl_2015_us_county.wkb_geometry,
             ST_SetSRID(ST_MakePoint(new.longitude, new.latitude), 4326));
+
     -- raise notice 'update_s_earthquake_ogc_fid: id=%, ogc_fid=%', new.id, _ogc_fid;
     new.ogc_fid = _ogc_fid;
     new.datestamp = new.time::date;
+
+    -- use richter scale to create 1-10 severity value
+    if new.magnitude < 1.0 then new.severity = 1;
+    elsif new.magnitude < 2.0 then new.severity = 2;
+    elsif new.magnitude < 3.0 then new.severity = 3;
+    elsif new.magnitude < 4.0 then new.severity = 4;
+    elsif new.magnitude < 5.0 then new.severity = 5;
+    elsif new.magnitude < 6.0 then new.severity = 6;
+    elsif new.magnitude < 7.0 then new.severity = 7;
+    elsif new.magnitude < 8.0 then new.severity = 8;
+    elsif new.magnitude < 9.0 then new.severity = 9;
+    else new.severity = 10;
+    end if;
+
     return new;
 end; \$body\$ language plpgsql;
 

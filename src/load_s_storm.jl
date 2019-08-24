@@ -1,7 +1,7 @@
 println("\n\nload_s_storm: start")
 
 # number of files to load as sample (0 disables)
-FILE_LIMIT = 1
+FILE_LIMIT = 4
 
 using Distributed
 if FILE_LIMIT == 0 && nprocs() < length(Sys.cpu_info())
@@ -46,9 +46,11 @@ create table if not exists public.s_storm (
     source               text,
     magnitude            decimal,
     magnitude_type       text,
+    tor_f_scale          text,
     category             text,
     ogc_fid              integer,
-    datestamp            date
+    datestamp            date,
+    severity             integer
 );
 
 create or replace function public.trigger_s_storm_udf()
@@ -61,11 +63,52 @@ begin
         where st_contains(
             tl_2015_us_county.wkb_geometry,
             ST_SetSRID(ST_MakePoint(new.begin_longitude, new.begin_latitude), 4326));
+
     -- raise notice 'update_s_storm_ogc_fid: id=%, ogc_fid=%', new.id, _ogc_fid;
     new.ogc_fid = _ogc_fid;
     new.datestamp = (left(new.begin_yearmonth::text, 4) || '-' || right(new.begin_yearmonth::text, 2) || '-' || new.begin_day::text)::date;
+
+    -- use hail size, wind speed or tor scale to create 1-10 severity value
+    if new.event_type = 'Hail' then
+        -- magnitude is hail size (in inches)
+        if new.magnitude < 0.25 then new.severity = 1;
+        elsif new.magnitude < 0.5 then new.severity = 2;
+        elsif new.magnitude < 0.75 then new.severity = 3;
+        elsif new.magnitude < 1.0 then new.severity = 4;
+        elsif new.magnitude < 1.5 then new.severity = 5;
+        elsif new.magnitude < 2.0 then new.severity = 6;
+        elsif new.magnitude < 2.5 then new.severity = 7;
+        elsif new.magnitude < 3.0 then new.severity = 8;
+        elsif new.magnitude < 3.5 then new.severity = 9;
+        else new.severity = 10;
+        end if;
+    elsif new.event_type = 'Tornado' then
+        -- tornado uses tor scale
+        if new.tor_f_scale = 'F0' then new.severity = 1;
+        elsif new.tor_f_scale = 'F1' then new.severity = 2;
+        elsif new.tor_f_scale = 'F2' then new.severity = 4;
+        elsif new.tor_f_scale = 'F3' then new.severity = 6;
+        elsif new.tor_f_scale = 'F4' then new.severity = 8;
+        elsif new.tor_f_scale = 'F5' then new.severity = 10;
+        end if;
+    else
+        -- wind speed
+        if new.magnitude < 12 then new.severity = 1;
+        elsif new.magnitude < 25 then new.severity = 2;
+        elsif new.magnitude < 50 then new.severity = 3;
+        elsif new.magnitude < 100 then new.severity = 4;
+        elsif new.magnitude < 150 then new.severity = 5;
+        elsif new.magnitude < 200 then new.severity = 6;
+        elsif new.magnitude < 250 then new.severity = 7;
+        elsif new.magnitude < 300 then new.severity = 8;
+        elsif new.magnitude < 350 then new.severity = 9;
+        else new.magnitude = 10;
+        end if;
+    end if;
+
     return new;
 end; \$body\$ language plpgsql;
+
 
 drop trigger if exists trigger_s_storm on public.s_storm;
 create trigger trigger_s_storm
@@ -92,7 +135,7 @@ LibPQ.close(postgres)
         :EVENT_ID, :STATE, :STATE_FIPS,
         :BEGIN_YEARMONTH, :BEGIN_DAY, :BEGIN_LOCATION, :BEGIN_LAT, :BEGIN_LON,
         :END_YEARMONTH, :END_DAY, :END_LOCATION, :END_LAT, :END_LON,
-        :EVENT_TYPE, :SOURCE, :MAGNITUDE, :MAGNITUDE_TYPE, :CATEGORY
+        :EVENT_TYPE, :SOURCE, :MAGNITUDE, :MAGNITUDE_TYPE, :TOR_F_SCALE, :CATEGORY
     ])
     println("\tsize=$(size(df))")
     # println("load_s_storm: columns=$(names(df))")
@@ -119,6 +162,7 @@ LibPQ.close(postgres)
             source,
             magnitude,
             magnitude_type,
+            tor_f_scale,
             category
         ) values (
             \$1,
@@ -138,7 +182,8 @@ LibPQ.close(postgres)
             \$15,
             \$16,
             \$17,
-            \$18
+            \$18,
+            \$19
         )
         """
     )

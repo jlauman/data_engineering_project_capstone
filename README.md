@@ -32,6 +32,8 @@ The source of this data set is:
 
   https://www.fs.usda.gov/rds/archive/catalog/RDS-2013-0009.4
 
+  https://www.nwcg.gov/term/glossary/size-class-of-fire
+
 The format selected for this project is the SQLite database.
 
 

@@ -1,4 +1,4 @@
-println("\n\nmake_d_location: start")
+println("\n\nmake_d_datestamp: start")
 
 prepend!(LOAD_PATH, ["Project.toml"])
 import LibPQ
@@ -45,4 +45,4 @@ LibPQ.execute(postgres, sql)
 LibPQ.close(postgres)
 
 
-println("make_d_location: stop")
+println("make_d_datestamp: stop")
