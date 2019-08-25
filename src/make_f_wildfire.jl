@@ -19,7 +19,8 @@ create table if not exists public.f_wildfire (
     size_acre       decimal not null,
     size_class      text not null,
     d_datestamp_id  date not null references public.d_datestamp(d_datestamp_id),
-    d_location_id   integer not null references public.d_location(d_location_id)
+    d_location_id   integer not null references public.d_location(d_location_id),
+    d_severity_id   integer not null references public.d_severity(d_severity_id)
 );
 
 
@@ -32,9 +33,19 @@ insert into public.f_wildfire (
     size_acre,
     size_class,
     d_datestamp_id,
-    d_location_id
+    d_location_id,
+    d_severity_id
 )
-select id, fire_name, latitude, longitude, fire_size, fire_size_class, datestamp, ogc_fid
+select
+    id,
+    fire_name,
+    latitude,
+    longitude,
+    fire_size,
+    fire_size_class,
+    datestamp,
+    ogc_fid,
+    severity
 from public.s_wildfire
 where ogc_fid is not null;
 """
