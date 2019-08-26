@@ -218,12 +218,12 @@ A summary of the data sets disk sizes is shown below.
 
   ```
   $ du -h data
-    65M	 data/usgs_earthquake
-   108K	 data/fs_usda_wildfire/Supplements
-   773M	 data/fs_usda_wildfire/Data
-   939M	 data/fs_usda_wildfire
+    65M  data/usgs_earthquake
+   108K  data/fs_usda_wildfire/Supplements
+   773M  data/fs_usda_wildfire/Data
+   939M  data/fs_usda_wildfire
    1014M data/noaa_storm
-   2.0G	 data
+   2.0G  data
   ```
 
 ## Project Set Up
@@ -252,16 +252,18 @@ is installed correctly.
 
   ```
   extname           extowner extnamespace extrelocatable extversion
-  plpgsql	          10       11           false	         1.0
-  pgcrypto	        10       2200	        true           1.3
-  postgis	          10       2200         false          2.5.2
-  postgis_topology	10       34395        false          2.5.2
+  plpgsql           10       11           false          1.0
+  pgcrypto          10       2200         true           1.3
+  postgis           10       2200         false          2.5.2
+  postgis_topology  10       34395        false          2.5.2
   ```
 
 Additional command line tools are required to convert shape files. On MacOS
 use the command below to install the GDAL tool set. See: https://gdal.org/
 
+  ```
   brew install gdal
+  ```
 
 The following references were used to understand the spatial system and tools.
 
@@ -410,7 +412,10 @@ result of the ETL process.
 |              |d_severity_id   |INTEGER       |Unique ID (1-10) into severity dimension              |
 
 
-## Fact Table Data Quality Checks
+## Data Quality Checks
+
+These queries show the counts of records imported into stage tables, which stage table records have
+`ogc_fid` location values and the final fact table record counts.
 
   ```
   check_records.jl: start
