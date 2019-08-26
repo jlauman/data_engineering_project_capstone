@@ -1,6 +1,6 @@
 # Data Engineering Capstone Project
 
-This is a Udacity Data Engineering Nanoegree open-ended capstone project.
+This is a Udacity Data Engineering Nanodegree course open-ended capstone project.
 
 
 ## Project Preface
@@ -9,7 +9,7 @@ This project uses the Julia language for ETL scripts which provides a similar,
 but different, environment for data transformation as Python+Pandas. One
 interesting Julia module used in this project is `Distributed` which provides
 a Python `multiprocessing`-like for spawning work into new OS processes. The
-problems encountered with the Julia language in this project were realted to
+problems encountered with the Julia language in this project were related to
 the relative youth of the Julia ecosystem and lack of documentation and examples
 for Julia modules.
 
@@ -248,7 +248,7 @@ PostgreSQL with PostGIS extension docker image.
   https://github.com/appropriate/docker-postgis/blob/f6d28e4a1871b1f72e1c893ff103f10b6d7cb6e1/10-2.4/Dockerfile
 
 Use the SQL `select * from pg_extension;` to check that the PostGIS extension
-is installed correclty.
+is installed correctly.
 
   ```
   extname           extowner extnamespace extrelocatable extversion
@@ -303,7 +303,7 @@ are included in the earthquake fact table.
 The NOAA storm data is an interesting data set to work with because it contains
 many different types of storm events including "Debris Flow", "Dust Devil", "Flood",
 "Hail", "Heavy Rain", "Lightning", "Thunderstorm Wind", "Tornado" and "Waterspout".
-For this project the severity value is calulcated differntly for hail (magnitude is
+For this project the severity value is calculated differently for hail (magnitude is
 the diameter of the hail), tornado which uses the Fujita "F" scale and other storms
 which are measured by wind speed.
 
@@ -525,8 +525,8 @@ an appropriate scale for comparing disaster events.
 ### What if the data was increased by 100x?
 
 If the data of this reporting database is increased by 100x a distributed processing
-mechanism could be used to ensure that ETL times remain resonable. The Julia language
-has a Spark-like work distrubution system where many remote Julia "nodes" can
+mechanism could be used to ensure that ETL times remain reasonable. The Julia language
+has a Spark-like work distribution system where many remote Julia "nodes" can
 parallelize the ETL workload.
 
 ### What if the pipelines were run on a daily basis by 7am?
