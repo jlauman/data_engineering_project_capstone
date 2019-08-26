@@ -265,7 +265,7 @@ Bureau shape file data and state FIPS codes is shown below.
   where
   st_contains(
     tl_2015_us_county.wkb_geometry,
-    ST_GeomFromText('Point(-110.588484 39.673284)', 4326)      
+    ST_GeomFromText('Point(-110.588484 39.673284)', 4326)
   );
 
 
@@ -311,16 +311,68 @@ The output of the `load.jl` script will be similar to the following:
 The following tables and fields describe the star schema tables that are the
 result of the ETL process.
 
-d_datestamp
-d_location
-d_severity
-f_earthquake
-f_storm
-f_wildfire
+|Table         |Field           |Type          |Description                                           |
+|--------------|----------------|--------------|------------------------------------------------------|
+|d_datestamp   |d_datestamp_id  |DATE          |Date in yyyy-mm-dd format                             |
+|              |year            |INTEGER       |Four digit numieric year                              |
+|              |month           |INTEGER       |Month as numeric value 1-12                           |
+|              |day             |INTEGER       |Day of month as numeric value 1-31                    |
+|              |weekofyear      |INTEGER       |Week of year as numeric value 1-53                    |
+
+|Table         |Field           |Type          |Description                                           |
+|--------------|----------------|--------------|------------------------------------------------------|
+|d_location    |d_location_id   |INTEGER       |Integer value from the U.S. Census Bureau shape file  |
+|              |state_fips      |TEXT          |Value that identifies a state                         |
+|              |state_name      |TEXT          |English name of state                                 |
+|              |county_fips     |TEXT          |Value that identifies a county (or equivalent)        |
+|              |county_name     |TEXT          |English name of county                                |
+
+
+|Table         |Field           |Type          |Description                                           |
+|--------------|----------------|--------------|------------------------------------------------------|
+|d_severity    |d_severity_id   |INTEGER       |Relative numeric value 1-10 for size/strenth of event |
+
+|Table         |Field           |Type          |Description                                           |
+|--------------|----------------|--------------|------------------------------------------------------|
+|f_earthquake  |event_id        |UUID          |Unique identifier across disaster events              |
+|              |earthquake_id   |TEXT          |Original earthquake ID from imported data set         |
+|              |latitude        |DECIMAL       |Latitude value                                        |
+|              |longitude       |DECIMAL       |Longitude value                                       |
+|              |magnitude       |DECIMAL       |Magnitude of earthquake on Ricther scale              |
+|              |magnitude_type  |TEXT          |Method of calculating the magnitude                   |
+|              |d_datestamp_id  |DATE          |Unique ID into datestamp dimension                    |
+|              |d_location_id   |INTEGER       |Unique ID into location dimension                     |
+|              |d_severity_id   |INTEGER       |Unique ID (1-10) into severity dimension              |
+
+|Table         |Field           |Type          |Description                                           |
+|--------------|----------------|--------------|------------------------------------------------------|
+|f_storm       |event_id        |UUID          |Unique identifier across disaster events              |
+|              |storm_id        |TEXT          |Original storm ID from imported data set              |
+|              |latitude        |DECIMAL       |Latitude value                                        |
+|              |longitude       |DECIMAL       |Longitude value                                       |
+|              |type            |TEXT          |English name of storm type                            |
+|              |magnitude       |DECIMAL       |Wind speed (or size if Hail)                          |
+|              |d_datestamp_id  |DATE          |Unique ID into datestamp dimension                    |
+|              |d_location_id   |INTEGER       |Unique ID into location dimension                     |
+|              |d_severity_id   |INTEGER       |Unique ID (1-10) into severity dimension              |
+
+|Table         |Field           |Type          |Description                                           |
+|--------------|----------------|--------------|------------------------------------------------------|
+|f_wildfire    |event_id        |UUID          |Unique identifier across disaster events              |
+|              |wildfire_id     |TEXT          |Original wildfire ID from imported data set           |
+|              |wildfire_name   |TEXT          |Original English name of wildfire                     |
+|              |latitude        |DECIMAL       |Latitude value                                        |
+|              |longitude       |DECIMAL       |Longitude value                                       |
+|              |size_acre       |DECIMAL       |Size of area covered by wildfire                      |
+|              |size_class      |TEXT          |Size class of wildfire (A-H)                          |
+|              |d_datestamp_id  |DATE          |Unique ID into datestamp dimension                    |
+|              |d_location_id   |INTEGER       |Unique ID into location dimension                     |
+|              |d_severity_id   |INTEGER       |Unique ID (1-10) into severity dimension              |
 
 
 ## Fact Table Data Quality Checks
 
+  ```
   check_records.jl: start
   ┌──────────────────────────────────────────────────────────────┐
   │                                                     ?column? │
@@ -406,6 +458,7 @@ f_wildfire
   └───────────────────────┴───────────────────────┘
 
   check_records: stop
+  ```
 
 
 ## Project Conclusion
