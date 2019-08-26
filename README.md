@@ -414,8 +414,8 @@ result of the ETL process.
 
 ## Data Quality Checks
 
-These queries show the counts of records imported into stage tables, which stage table records have
-`ogc_fid` location values and the final fact table record counts.
+These query results show the counts of records imported into stage tables, counts of stage table records
+that have `ogc_fid` location values and the final fact table record counts.
 
   ```
   check_records.jl: start
