@@ -5,6 +5,13 @@ This is a Udacity Data Engineering Nanoegree open-ended capstone project.
 
 ## Project Preface
 
+This project uses the Julia language for ETL scripts which provides a similar,
+but different, environment for data transformation as Python+Pandas. One
+interesting Julia module used in this project is `Distributed` which provides
+a Python `multiprocessing`-like for spawning work into new OS processes. The
+problems encountered with the Julia language in this project were realted to
+the relative youth of the Julia ecosystem and lack of documentation and examples
+for Julia modules.
 
 
 ## Project Scope
@@ -17,6 +24,9 @@ extracted, transformed and loaded without any filtering or pre-selection. A
 data scientist using the final combined data sets is expected to define "extreme
 environmental event" is within the context of their analysis.
 
+The data sets identified for this project are historical data sets, so the
+ETL process will focus on creating a standard star schema design with fact and
+dimension tables.
 
 ## Source Data Sets
 
@@ -67,6 +77,7 @@ The following file contains the data dictionary:
 The format selected for this data set is CSV files. The record count output
 from the download CSV files is shown below.
 
+  ```
   $ wc -l data/noaa_storm/StormEvents_details-ftp_v1.0_d*.csv
      13535 data/noaa_storm/StormEvents_details-ftp_v1.0_d1992_c20170717.csv
       8665 data/noaa_storm/StormEvents_details-ftp_v1.0_d1993_c20170717.csv
@@ -93,6 +104,7 @@ from the download CSV files is shown below.
      59466 data/noaa_storm/StormEvents_details-ftp_v1.0_d2014_c20180718.csv
      57789 data/noaa_storm/StormEvents_details-ftp_v1.0_d2015_c20190817.csv
    1185011 total
+   ```
 
 
 ### USGS Earthquake Catalog (API)
@@ -146,6 +158,7 @@ and building bounding box query parameters are included below.
 The format selected for this data set is CSV. The record count output from the
 downloaded CSV files is shown below.
 
+  ```
   $ wc -l data/usgs_earthquake/*.csv
    22654 data/usgs_earthquake/1992.csv
     8419 data/usgs_earthquake/1993.csv
@@ -172,7 +185,7 @@ downloaded CSV files is shown below.
    18107 data/usgs_earthquake/2014.csv
    18968 data/usgs_earthquake/2015.csv
   307022 total
-
+  ```
 
 ### United States Census Bureau Reference Files
 
@@ -203,14 +216,15 @@ The data dictionary for the downloaded shape files is below.
 
 A summary of the data sets disk sizes is shown below.
 
-   $ du -h data
-    65M	data/usgs_earthquake
-   108K	data/fs_usda_wildfire/Supplements
-   773M	data/fs_usda_wildfire/Data
-   939M	data/fs_usda_wildfire
-   1014M	data/noaa_storm
-   2.0G	data
-
+  ```
+  $ du -h data
+    65M	 data/usgs_earthquake
+   108K	 data/fs_usda_wildfire/Supplements
+   773M	 data/fs_usda_wildfire/Data
+   939M	 data/fs_usda_wildfire
+   1014M data/noaa_storm
+   2.0G	 data
+  ```
 
 ## Project Set Up
 
@@ -236,11 +250,13 @@ PostgreSQL with PostGIS extension docker image.
 Use the SQL `select * from pg_extension;` to check that the PostGIS extension
 is installed correclty.
 
+  ```
   extname           extowner extnamespace extrelocatable extversion
   plpgsql	          10       11           false	         1.0
   pgcrypto	        10       2200	        true           1.3
   postgis	          10       2200         false          2.5.2
   postgis_topology	10       34395        false          2.5.2
+  ```
 
 Additional command line tools are required to convert shape files. On MacOS
 use the command below to install the GDAL tool set. See: https://gdal.org/
@@ -260,19 +276,42 @@ The following references were used to understand the spatial system and tools.
 An example SQL query that combines functions from PostGIS, the U.S. Census
 Bureau shape file data and state FIPS codes is shown below.
 
+  ```
   SELECT statefp, state_name, namelsad FROM tl_2015_us_county
   join s_state_geocode ST on ST.state_fips = statefp
   where
-  st_contains(
+  ST_Contains(
     tl_2015_us_county.wkb_geometry,
     ST_GeomFromText('Point(-110.588484 39.673284)', 4326)
   );
+  ```
 
 
 ## Exploring Data Sets
 
+The U.S. Forest Service wildfire data set is the easiest to work because it is
+already in table format as a SQLite database. The number of fields and related
+tables provided in the SQLite database is extensive -- only a small set of
+fields from the `Fires` table is used in this project.
 
+The U.S. Geological Survey earthquake data set is an interesting data set
+because the initial filtering is done through the HTTP API. For this project,
+only earthquakes with a 2 magnitude and higher are requested from the API. The
+results contain records for earthquakes, and quarry explosions. Only earthquakes
+are included in the earthquake fact table.
 
+The NOAA storm data is an interesting data set to work with because it contains
+many different types of storm events including "Debris Flow", "Dust Devil", "Flood",
+"Hail", "Heavy Rain", "Lightning", "Thunderstorm Wind", "Tornado" and "Waterspout".
+For this project the severity value is calulcated differntly for hail (magnitude is
+the diameter of the hail), tornado which uses the Fujita "F" scale and other storms
+which are measured by wind speed.
+
+All three data sets included latitude and longitude coordinates to identify location
+of the event. For earthquakes and storm the coordinates could be offshore, so only
+only land based events are includes to match with the state/county data from the
+U.S. Census Bureau. The storm event records also include beginning and ending
+coordinates -- only beginning coordinates are used in this project.
 
 
 ## Project Script Execution
@@ -291,6 +330,7 @@ that requires them is run.
 
 The output of the `load.jl` script will be similar to the following:
 
+  ```
   load...
   ./src/load_s_state_geocodes.jl: elapsed time is 16 seconds, 707 milliseconds
   ./src/load_us_county_shp.jl: elapsed time is 36 seconds, 472 milliseconds
@@ -304,7 +344,7 @@ The output of the `load.jl` script will be similar to the following:
   ./src/make_f_storm.jl: elapsed time is 49 seconds, 347 milliseconds
   ./src/make_f_wildfire.jl: elapsed time is 2 minutes, 18 seconds, 883 milliseconds
   load: total elapsed time is 1 hour, 11 minutes, 30 seconds, 455 milliseconds
-
+  ```
 
 ## Project Data Dictionary
 
@@ -374,6 +414,7 @@ result of the ETL process.
 
   ```
   check_records.jl: start
+
   ┌──────────────────────────────────────────────────────────────┐
   │                                                     ?column? │
   │                                       Union{Missing, String} │
@@ -462,3 +503,43 @@ result of the ETL process.
 
 
 ## Project Conclusion
+
+This project served as an interesting experiment in processing million-plus sized
+data sets into an efficient structure for reporting. The combination of the Julia
+language and the PostgreSQL database (with the PostGIS extension) form a powerful
+duo of processing and storage.
+
+The one slow process within the ETL scripts is the loading of CSV records into
+PostgreSQL. This is likely due to the 2-step conversion from CSV to a Julia dataframe
+and then from a dataframe to SQL for inserting into PostgreSQL. Based on experience
+with other ETL projects and discussions in online forums, this 2-step process can
+be improved by transforming the CSV records directly into SQL in batches.
+
+Another detail in this project that can be improved is the relative severity scale
+created to have number to compare earthquakes to storms to wildfires. The method
+for assigning a severity number (1-10) is crude and requires more research to find
+an appropriate scale for comparing disaster events.
+
+## Other Questions
+
+### What if the data was increased by 100x?
+
+If the data of this reporting database is increased by 100x a distributed processing
+mechanism could be used to ensure that ETL times remain resonable. The Julia language
+has a Spark-like work distrubution system where many remote Julia "nodes" can
+parallelize the ETL workload.
+
+### What if the pipelines were run on a daily basis by 7am?
+
+If this reporting database needs to be run daily at 7am, some form of orchestrator
+similar to Apache Airflow needs to be employed. Based on the maturity of Apache
+Airflow it should be possible to use the bash operator to launch Julia scripts in
+order to provide a familiar orchestration framework to end users.
+
+### What if the database needed to be accessed by 100+ people?
+
+If this reporting database needs to be accessed by 100+ people on a daily basis,
+say as an online service, several options are available. One option would be to
+use the read-replica pattern to have multiple read-only databases to support the
+query load. Another option would be to use an cloud-native database like Amazon
+Redshift where multiple cores may be used on partitions of the reporting database.
